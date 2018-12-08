@@ -48,7 +48,7 @@ elif sys.argv[1] == "check":
 
     r = requests.post(PUZZLE_SOLVE_BASE.format(day), headers=HEADERS, data={'level':level, 'answer':answer})
     if "day-success" in r.text:
-        print("\n\nCongratulations!")
+        print("Congratulations!")
     else:
         print(r.text)
     

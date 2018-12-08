@@ -1,0 +1,54 @@
+#!/usr/local/bin/python3.6
+import sys, os, datetime, requests, re
+
+PUZZLE_DESCRIPTION_BASE = 'https://adventofcode.com/2018/day/{}'
+PUZZLE_INPUT_BASE = 'https://adventofcode.com/2018/day/{}/input'
+PUZZLE_SOLVE_BASE = 'https://adventofcode.com/2018/day/{}/answer'
+SESSION = open('session.txt').read().strip()
+HEADERS = {"cookie":"session={}".format(SESSION)}
+
+if sys.argv[1] == "f" or sys.argv[1] == "fetch":
+    day = sys.argv[2] if len(sys.argv) > 2 else datetime.datetime.now().day
+    if not os.path.exists("day{}".format(day)):
+            os.mkdir('day{}'.format(day))
+            print("[*] Made day {} directory".format(day))
+    else:
+        print("[*] Directory already exists - not creating")
+
+    
+    r = requests.get(PUZZLE_DESCRIPTION_BASE.format(day), headers=HEADERS)
+    description = re.sub("<.*?>|&nbsp;", " ", r.text[r.text.index('<main>') + len('<main>'):r.text.index("</main>")])
+    f = open('day{}/description.txt'.format(day), 'w+')
+    f.write(description)
+    f.close()
+    print("[*] Downloaded day {} description".format(day))
+
+    r = requests.get(PUZZLE_INPUT_BASE.format(day), headers=HEADERS)
+    f = open('day{}/input.txt'.format(day), 'w+')
+    f.write(r.text.strip())
+    f.close()
+    print("[*] Downloaded day {} input".format(day))
+
+
+    if not os.path.exists("day{}/solve.py".format(day)):
+        open('day{}/solve.py'.format(day), 'w+')
+        print("[*] Creating solve.py")
+
+    if not os.path.exists("day{}/solve2.py".format(day)):
+        open('day{}/solve2.py'.format(day), 'w+')
+        print("[*] Creating solve2.py")
+
+elif sys.argv[1] == "check":
+    day = sys.argv[2]
+    answer = sys.argv[3]
+
+    level = 1
+    if 'The first half of this puzzle is complete!' in requests.get(PUZZLE_DESCRIPTION_BASE.format(day), headers=HEADERS).text:
+        level += 1
+
+    r = requests.post(PUZZLE_SOLVE_BASE.format(day), headers=HEADERS, data={'level':level, 'answer':answer})
+    if "day-success" in r.text:
+        print("\n\nCongratulations!")
+    else:
+        print(r.text)
+    
